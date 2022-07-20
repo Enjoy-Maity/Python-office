@@ -1,0 +1,19 @@
+Option Explicit
+
+Sub RunPythonScript()
+' Declare Variables
+Dim objshell As Object
+Dim PythonExe,PythonScript As String
+
+'Create a new Shell Object
+Set objshell = VBA.CreateObject("Wscript.Shell")
+
+'Provide the file path to the Python PythonExe (If there are spaces in the path name any where in the name of the directory use """ else " )
+PythonExe = """C:\Program Files(x86)\Microsoft Visual\Shared\Python36_64\python.exe"""
+
+'Provide the file path to the python PythonScript
+PythonScript= "C:\Users\Alex\Desktop\ExcelToPowerPoint.py"
+
+'Run the Python PythonScript
+objShell.Run PythonExe & PythonScript 
+End Sub
