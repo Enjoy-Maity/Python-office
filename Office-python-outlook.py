@@ -3,7 +3,7 @@ from msilib.schema import Directory
 
 def handle(error):
     if error== 'ModuleNotFoundError':
-        required_modules={'pandas','pywin32','Jinja2', 'openpyxl'}
+        required_modules={'pandas','pywin32','Jinja2', 'openpyxl','numpy'}
         installed_modules={pkg.key for pkg in pkg_resources.working_set}
         missing_modules= required_modules-installed_modules
         if missing_modules:
@@ -61,23 +61,26 @@ try:
         User=subprocess.getoutput("echo %username%") # finding the Username of the user where the directory of the file is located 
 
         Workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(User)
-        wb=load_workbook(Workbook,read_only=True)
-        daily_plan_sheet=pd.ExcelFile(Workbook,'Planning Sheet')
+        wb=load_workbook(Workbook,read_only=False)
+        excel=pd.ExcelFile(Workbook)
+        daily_plan_sheet=pd.read_excel(excel,'Planning Sheet')
         
         if 'PS Core-Inter Domain' in wb.sheetnames:
-            pscore_interdomain=pd.ExcelFile(Workbook,'PS Core-Inter Domain')
+            pscore_interdomain=pd.read_excel(Workbook,'PS Core-Inter Domain')
         else:
-            df=pd.DataFrame()
-            pscore_interdomain=pd.to_excel('MPBN Daily Planning Sheet.xlsx', sheet_name='PS Core-Inter Domain')
+           pscore_interdomain=wb.create_sheet()
+           pscore_interdomain.title="PS Core-Inter Domain"
         
         if 'CS Core-Inter Domain' in wb.sheetnames:
-            cscore_interdomain=pd.ExcelFile(Workbook,'CS Core-Inter Domain')
+            cscore_interdomain=pd.read_excel(Workbook,'CS Core-Inter Domain')
         else :
-            df=pd.Dataframe()
-            cscore_interdomain=pd.to_excel(Workbook,sheet_name='CS Core-Inter Domain')
-        
-        Mail_id=pd.ExcelFile(Workbook,'Mail Id')
-        sendmail()
+            cscore_interdomain=wb.create_sheet()
+            cscore_interdomain.title="CS Core-Inter Domain"
+
+        circles=daily_plan_sheet['Circle'].unique()
+        print(circles)
+        #Mail_id=pd.ExcelFile(Workbook,'Mail Id')
+        #sendmail()
     
     
 except(ModuleNotFoundError,FileNotFoundError) as error:
