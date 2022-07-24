@@ -1,6 +1,3 @@
-#from msilib.schema import Directory
-
-
 def handle(error):
     if error== 'ModuleNotFoundError':
         required_modules={'pandas','pywin32','Jinja2', 'openpyxl','numpy'}
