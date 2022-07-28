@@ -2,6 +2,9 @@
 ######################### Custom Exceptions #########################
 #####################################################################
 
+from datetime import date
+
+
 class EmptyString (Exception):
     def __init__(self,msg):
         self.msg=msg
@@ -10,43 +13,27 @@ class ContainsInteger(Exception):
     def __init__(self,msg):
         self.msg=msg
 
+class EmailIDError(Exception):
+    def __init__(self,msg):
+        self.msg=msg
+
 
 #####################################################################
 #############################    Sendmail   #########################
 #####################################################################
 
-def sendmail(dataframe,to,cc,circle,sender):
+def sendmail(dataframe,to,cc,body,subject,sender):
     outlook_mailer=win32.Dispatch('Outlook.Application')
     msg=outlook_mailer.CreateItem(0)
-    html_body="""
-    <html>        
-        <body>
-            <div><p>Hi team,</p><br><br>
-                <p>Please confirm below points so that we will approve CR’s.<br><br></p>
-                <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).<br></p>
-                <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.<br></p>
-                <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
-            </div>
-            <div>
-                <p>{}</p>
-            </div>
-            <div>
-                <p>Regards</p>
-                <p>{}</p>
-                <p>only for testing From Enjoy Maity</p>
-                <p></p>
-            </div>
-        </body>
-    </html>
-    """
-    msg.Subject="ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {}".format(circle)
+    html_body=body
+    msg.Subject=subject
     msg.To=to
     msg.CC=cc
     dataframe=dataframe.style.set_table_styles([
-        {'selector':'th','props':'border:1px solid black;'},
-        {'selector':'tr','props':'border:1px solid black;'},
-        {'selector':'td','props':'border:1px solid black;'},
-        {'selector':'tr:nth-child(even)','props':'border:1px solid black;'}])
+        {'selector':'th','props':'border:1px solid black; color:white; background-color:rgb(0, 51, 204);text-align:center;'},
+        {'selector':'tr','props':'border:1px solid black;text-align:center;'},
+        {'selector':'td','props':'border:1px solid black;text-align:center;'},
+        {'selector':'tr:nth-child(even)','props':'border:1px solid black;text-align:center;'}])
     dataframe=dataframe.hide(axis='index')
     msg.HTMLBody=html_body.format(dataframe.to_html(index=False),sender)
     msg.Save()
@@ -56,36 +43,52 @@ def sendmail(dataframe,to,cc,circle,sender):
 #############################  Paco_cscore  #########################
 #####################################################################
 
-def paco_cscore(Workbook):
-    excel=pd.ExcelFile(Workbook)
-    daily_plan_sheet=pd.read_excel(excel,'Planning Sheet')
-    daily_plan_sheet.fillna("Not Available")
-    Email_Id=pd.read_excel(Workbook,'Mail Id')
+def paco_cscore(workbook,sender):
+    
+
+    daily_plan_sheet=pd.read_excel(workbook,'Planning Sheet')
+    Email_Id=pd.read_excel(workbook,'Mail Id')
     #print(daily_plan_sheet)
+
+    # Sheetnames
     sheetname="PS Core-Inter Domain"
+    sheetname2="CS Core-Inter Domain"
+    sheetname3="RAN-Inter Domain"
+
+
     category="MPBN-MS"
     owner_domain="SRF MPBN"
     team_leader="Karan Loomba"
-    Cr_no=[]
-    executor=[]
+
+    ####################################################### Entering details for ps core or paco circle ###########################################################
+    execution_date=[]
+    maintenance_window=[]
+    mpbn_cr_no=[]
+    location=[]
+    mpbn_change_responsible_executor=[]
     validator=[]
     impact=[]
     circle=[]
-    activity_title=[]
+    mpbn_activity_title=[]
     cr_owner_domain=[]
     inter_domain=[]
     cr_category=[]
-    node=[]
-    Kpis=[]
+    impacted_node_details=[]
+    Kpis_to_be_monitored=[]
+    # Execution Date	Maintenance Window	MPBN CR NO	CR Category	Impact*	Location	Circle	MPBN Activity Title	CR Owner Domain	MPBN Change Responsible	Technical Validator/Team Lead	InterDomain	Impacted Node Details	KPI's to be monitored
     for i in range(0,len(daily_plan_sheet)):
         if daily_plan_sheet.iloc[i]['Domain kpi']=="PS Core" or daily_plan_sheet.iloc[i]['Domain kpi']=="Paco-circle":
-            Cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
             cr_category.append(category)
             impact.append(daily_plan_sheet.iloc[i]['Impact'])
-            circle.append(daily_plan_sheet.iloc[i]['Circle'])
-            activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+            location.append(daily_plan_sheet.iloc[i]['Location'])
+            txt=str(daily_plan_sheet.iloc[i]['Circle'])
+            circle.append(txt.upper())
+            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
             cr_owner_domain.append(owner_domain)
-            executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
             technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
             if technical_validator==team_leader:
                 validator.append(team_leader)
@@ -93,16 +96,165 @@ def paco_cscore(Workbook):
                 tech_validator_team_leader=technical_validator+"/"+team_leader
                 validator.append(tech_validator_team_leader)
             inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
-            node.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
-            Kpis.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
 
-    dictionary1={'CR':Cr_no,'CR Category':cr_category,'Impact*':impact,'Circle':circle,'Activity Title':activity_title,'CR Owner Domain':cr_owner_domain,'Executor':executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Node':node,'KPIs':Kpis}
+    dictionary1={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored}
     df=pd.DataFrame(dictionary1)
+
+
+    ######################################################### Entering details for Cs core #######################################################################
+    execution_date=[]
+    maintenance_window=[]
+    mpbn_cr_no=[]
+    location=[]
+    mpbn_change_responsible_executor=[]
+    validator=[]
+    impact=[]
+    circle=[]
+    mpbn_activity_title=[]
+    cr_owner_domain=[]
+    inter_domain=[]
+    cr_category=[]
+    impacted_node_details=[]
+    Kpis_to_be_monitored=[]
+    for i in range(0,len(daily_plan_sheet)):
+        if daily_plan_sheet.iloc[i]['Domain kpi']=="CS Core":
+            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+            cr_category.append(category)
+            impact.append(daily_plan_sheet.iloc[i]['Impact'])
+            location.append(daily_plan_sheet.iloc[i]['Location'])
+            txt=str(daily_plan_sheet.iloc[i]['Circle'])
+            circle.append(txt.upper())
+            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+            cr_owner_domain.append(owner_domain)
+            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+            technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
+            if technical_validator==team_leader:
+                validator.append(team_leader)
+            else:
+                tech_validator_team_leader=technical_validator+"/"+team_leader
+                validator.append(tech_validator_team_leader)
+            inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
+            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+    dictionary2={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored}
+    df2=pd.DataFrame(dictionary2)
+
+
+    ##########################################################  Entering details for RAN  ########################################################################
+    execution_date=[]
+    maintenance_window=[]
+    mpbn_cr_no=[]
+    location=[]
+    mpbn_change_responsible_executor=[]
+    validator=[]
+    impact=[]
+    circle=[]
+    mpbn_activity_title=[]
+    cr_owner_domain=[]
+    inter_domain=[]
+    cr_category=[]
+    impacted_node_details=[]
+    Kpis_to_be_monitored=[]
+    oss_name=[]
+    oss_IP=[]
+    # Execution Date	Maintenance Window	MPBN CR NO	CR Category	Impact*	Location	Circle	MPBN Activity Title	CR Owner Domain	MPBN Change Responsible	Technical Validator/Team Lead	InterDomain	Impacted Node Details	KPI's to be monitored
+    for i in range(0,len(daily_plan_sheet)):
+        if daily_plan_sheet.iloc[i]['Domain kpi']=="RAN":
+            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+            cr_category.append(category)
+            impact.append(daily_plan_sheet.iloc[i]['Impact'])
+            location.append(daily_plan_sheet.iloc[i]['Location'])
+            txt=str(daily_plan_sheet.iloc[i]['Circle'])
+            circle.append(txt.upper())
+            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+            cr_owner_domain.append(owner_domain)
+            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+            technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
+            if technical_validator==team_leader:
+                validator.append(team_leader)
+            else:
+                tech_validator_team_leader=technical_validator+"/"+team_leader
+                validator.append(tech_validator_team_leader)
+            inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
+            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+            oss_name.append(daily_plan_sheet.iloc[i]['oss name'])
+            oss_IP.append(daily_plan_sheet.iloc[i]['oss ip'])
+
+    dictionary3={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored,'OSS Name':oss_name,'OSS IP':oss_IP}
+    df3=pd.DataFrame(dictionary3)
+
+
     df.reset_index(drop=True,inplace=True)
-    print(df)
+    df2.reset_index(drop=True,inplace=True)
+    df3.reset_index(drop=True,inplace=True)
+    list_of_interdomains=["CS Core","PS Core","RAN"]
+    tomorrow=datetime.now()+timedelta(1)
+
+
+    suffix=["st","nd","rd","th"]
+    date_end_digit=int(tomorrow.strftime("%d"))
+    if date_end_digit==1:
+        suffix_for_date=suffix[0]
+    elif date_end_digit==2:
+        suffix_for_date=suffix[1]
+    elif date_end_digit==3:
+        suffix_for_date=suffix[2]
+    else:
+        suffix_for_date=suffix[3]
+    for_date=tomorrow.strftime("%d{}_%b'%y").format(suffix_for_date)
+
+    print(len(Email_Id))
+    
+    list_of_dfs=[df2,df,df3]
+
+    for i in list_of_interdomains:
+        subject=f"ONLY FOR TESTING: KPI Monitoring | {i} for MPBN CRs | {for_date}"
+        if i=="CS Core":
+            to=Email_Id.iloc[4]['To Mail List']
+            cc=Email_Id.iloc[4]['Copy Mail List']
+            dataframe=df2
+        elif i=="PS Core":
+            to=Email_Id.iloc[3]['To Mail List']
+            cc=Email_Id.iloc[3]['Copy Mail List']
+            dataframe=df
+        elif i=="RAN":
+            to=Email_Id.iloc[5]['To Mail List']
+            cc=Email_Id.iloc[5]['Copy Mail List']
+            dataframe=df3
+        mpbn_html_body="""
+            <html>
+                <body>
+                    <div>
+                            <p><br><br>Hi Team,</p><br><br>
+                            <p>Please find below the list of MPBN activity which includes Core nodes, so KPI monitoring required. Impacted nodes with KPI details given below. Please share KPI monitoring resource from your end.<br><br></p>
+                            <p>@Core Team: Please contact below spoc region wise if any issue with KPI input.<br><br></p>
+                            <p>Manoj Kumar: North region and west region </p>
+                            <p>Arka Maiti: East region and South region <br></p>
+                            <p>Note:-If there is any deviation in KPI please call to Executer before 6 AM. After that please call to technical validator/Team Lead.<br><br></p>
+                    
+                    </div>
+                    <div>
+                        {}
+                    </div>
+                    <div>
+                            <p>With Regards</p>
+                            <p>{}</p>
+                            <p>Ericsson India Global Services Pvt. Ltd.</p>
+                    </div>
+                </body>
+            </html>
+        """
+        sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
 
     """
-    # this is one way of writing into the exccel sheet but it didn't work
+    # this is one way of writing into the excel sheet but it didn't work
 
     excel_wb=win32.gencache.EnsureDispatch("Excel.Application")
     wb=excel_wb.Workbooks.Open(Workbook)
@@ -147,9 +299,11 @@ def paco_cscore(Workbook):
         wb.close()
     """
     
-    writer=pd.ExcelWriter(Workbook,engine='xlsxwriter')
+    writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
     daily_plan_sheet.to_excel(writer,sheet_name='Planning Sheet',index=False)
     df.to_excel(writer,sheet_name=sheetname,index=False)
+    df2.to_excel(writer,sheet_name=sheetname2,index=False)
+    df3.to_excel(writer,sheet_name=sheetname3,index=False)
     Email_Id.to_excel(writer,sheet_name='Mail Id',index=False)
 
     writer.save()
@@ -159,49 +313,106 @@ def paco_cscore(Workbook):
 #####################################################################
 
 def fetch_details(sender):
-    User=subprocess.getoutput("echo %username%") # finding the Username of the user where the directory of the file is located 
+    user=subprocess.getoutput("echo %username%") # finding the Username of the user where the directory of the file is located 
 
-    Workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(User)
-    """excel=pd.ExcelFile(Workbook)
+    workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(user)
+    print(workbook)
+    excel=pd.ExcelFile(workbook)
     daily_plan_sheet=pd.read_excel(excel,'Planning Sheet')
+    print(len(daily_plan_sheet))
     Email_ID=pd.read_excel(excel,'Mail Id')
+    print(len(Email_ID))
 
-    if 'CS Core-Inter Domain' in wb.sheetnames:
-        pass
-    else :
-        cscore_interdomain=wb.create_sheet()
-        cscore_interdomain.title="CS Core-Inter Domain"
+    for j in range(0,len(daily_plan_sheet)):
+        str=daily_plan_sheet.at[j,'Circle']
+        daily_plan_sheet.at[j,'Circle']=str.upper()
 
     circles=daily_plan_sheet['Circle'].unique()
+    print(circles)
+    email_id_list=Email_ID['Circle'].unique()
+    print(email_id_list)
     # print(circles) # checking for all the unique values of circles in the MPBN Planning Sheets
+    remainder=list(set(circles)-set(email_id_list))
+    remainder_list=",".join(remainder)
+    if len(remainder)>0:
+        print(f"\nMail could not be sent for {remainder_list} as there's no email id present for the {remainder_list} in the Email ID sheet in MPBN Daily Planning Sheet")
+    
+    circles=list(set(circles)-set(remainder))
         
     for i in range(0,len(circles)):
+
         execution_date=[]       #  list for collecting execution date of each Cr
         circle=[]               #  list for collecting circle of each CR
         maintenance_window=[]   #  list for collecting the maintenance window of each CR
         cr_no=[]                #  list for collecting the CR No
         activity_title=[]       #  list for collecting the activity title each CR
         risk=[]                 #  list for collecting the risk level of each CR
-
+        location=[]             #  list for collecting the location of each CR
 
         for j in range(0,len(daily_plan_sheet)):
-            if daily_plan_sheet.iloc[j]['Circle']==circles[i]:
-                execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
-                maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
-                cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
-                activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
-                risk.append(daily_plan_sheet.iloc[j]['Risk'])
-                circle.append(daily_plan_sheet.iloc[j]['Circle'])
-        dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk, 'Circle':circle}
-        dataframe=pd.DataFrame(dictionary_for_insertion)
-        dataframe.reset_index(drop=True,inplace= True)
-        for k in range(0,len(Email_ID)):
-            if(Email_ID.iloc[k]['Circle']==circles[i]):
-                to=Email_ID.iloc[k]['To Mail List']
-                cc=Email_ID.iloc[k]['Copy Mail List']
-                cir=circles[i]
-        sendmail(dataframe,to,cc,cir,sender)"""
-    paco_cscore(Workbook)
+
+            tomorrow=datetime.now()+timedelta(1)
+
+            if daily_plan_sheet.iloc[j]['Execution Date']==tomorrow.strftime("%d/%m/%Y"): # Adding constraint to check for CRs for next date only
+
+                if daily_plan_sheet.iloc[j]['Circle']==circles[i]:
+
+                    execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
+                    maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
+                    cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
+                    activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
+                    risk.append(daily_plan_sheet.iloc[j]['Risk'])
+                    circle.append(daily_plan_sheet.iloc[j]['Circle'])
+                    location.append(daily_plan_sheet.iloc[j]['Location'])
+
+            dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
+            dataframe=pd.DataFrame(dictionary_for_insertion)
+            dataframe.reset_index(drop=True,inplace= True)
+
+
+            cir=circles[i]
+
+            if cir=='DL':
+                row_to_fetch=0
+
+            elif cir=='PB':
+                row_to_fetch=1
+
+            elif cir=='HRY':
+                row_to_fetch=2
+            else :
+                pass
+
+        
+            to=Email_ID.iloc[row_to_fetch]['To Mail List']
+            cc=Email_ID.iloc[row_to_fetch]['Copy Mail List']
+            subject=f"ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {cir}"
+            body="""
+                <html>        
+                    <body>
+                        <div><p>Hi team,</p><br><br>
+                            <p>Please confirm below points so that we will approve CR’s.<br><br></p>
+                            <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).<br></p>
+                            <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.<br></p>
+                            <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
+                        </div>
+                        <div>
+                            <p>{}</p>
+                        </div>
+                        <div>
+                            <p>Regards</p>
+                            <p>{}</p>
+                            <p>only for testing From Enjoy Maity</p>
+                            <p></p>
+                            </div>
+                    </body>
+                </html>
+                """
+            sendmail(dataframe,to,cc,body,subject,sender)
+            print(f"\nMail Sent for the Circle {cir}")
+            time.sleep(5)
+            
+    paco_cscore(workbook,sender)
 
 
 #####################################################################
@@ -214,6 +425,8 @@ if __name__=="__main__":
         import sys
         import os
         import re
+        import time
+        from datetime import datetime,timedelta
         import subprocess
         subprocess.run(["python.exe" ,"-m ","pip" ,"install" ,"--upgrade ","pip"],shell=True)
         import pkg_resources
@@ -221,7 +434,6 @@ if __name__=="__main__":
         import win32com.client as win32
         from openpyxl import load_workbook
         from openpyxl import Workbook
-        import xlwings as xw
         import xlsxwriter
         import numpy
         sender=input("Enter your name to start the program or n/N to exit : ")
@@ -237,7 +449,7 @@ if __name__=="__main__":
             fetch_details(sender)
 
     except ModuleNotFoundError:
-         required_modules={'pandas','pywin32','Jinja2', 'openpyxl','numpy','xlwings','xlsxwriter'}
+         required_modules={'pandas','pywin32','Jinja2', 'openpyxl','numpy','xlsxwriter'}
          installed_modules={pkg.key for pkg in pkg_resources.working_set}
          missing_modules= required_modules-installed_modules
          if missing_modules:
@@ -268,6 +480,9 @@ if __name__=="__main__":
         current_file=__file__ # gets the value of current running file
         subprocess.run(['python', current_file])
         sys.exit(0)
+    
+    except EmailIDError as error:
+        print(error)
 
 
    
