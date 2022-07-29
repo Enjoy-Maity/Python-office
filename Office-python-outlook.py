@@ -199,7 +199,7 @@ def paco_cscore(workbook,sender):
 
 
     suffix=["st","nd","rd","th"]
-    date_end_digit=int(tomorrow.strftime("%d"))
+    date_end_digit=int(tomorrow.strftime("%d"))%10
     if date_end_digit==1:
         suffix_for_date=suffix[0]
     elif date_end_digit==2:
@@ -209,8 +209,6 @@ def paco_cscore(workbook,sender):
     else:
         suffix_for_date=suffix[3]
     for_date=tomorrow.strftime("%d{}_%b'%y").format(suffix_for_date)
-
-    print(len(Email_Id))
     
     list_of_dfs=[df2,df,df3]
 
@@ -228,6 +226,8 @@ def paco_cscore(workbook,sender):
             to=Email_Id.iloc[5]['To Mail List']
             cc=Email_Id.iloc[5]['Copy Mail List']
             dataframe=df3
+    
+    
         mpbn_html_body="""
             <html>
                 <body>
@@ -353,64 +353,62 @@ def fetch_details(sender):
 
             tomorrow=datetime.now()+timedelta(1)
 
-            if daily_plan_sheet.iloc[j]['Execution Date']==tomorrow.strftime("%d/%m/%Y"): # Adding constraint to check for CRs for next date only
+            if daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
 
-                if daily_plan_sheet.iloc[j]['Circle']==circles[i]:
+                execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
+                maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
+                cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
+                activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
+                risk.append(daily_plan_sheet.iloc[j]['Risk'])
+                circle.append(daily_plan_sheet.iloc[j]['Circle'])
+                location.append(daily_plan_sheet.iloc[j]['Location'])
 
-                    execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
-                    maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
-                    cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
-                    activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
-                    risk.append(daily_plan_sheet.iloc[j]['Risk'])
-                    circle.append(daily_plan_sheet.iloc[j]['Circle'])
-                    location.append(daily_plan_sheet.iloc[j]['Location'])
+        dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
+        dataframe=pd.DataFrame(dictionary_for_insertion)
+        dataframe.reset_index(drop=True,inplace=True)
 
-            dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
-            dataframe=pd.DataFrame(dictionary_for_insertion)
-            dataframe.reset_index(drop=True,inplace= True)
+        cir=circles[i]
+
+        if cir=='DL':
+            row_to_fetch=0
+
+        elif cir=='PB':
+            row_to_fetch=1
+
+        elif cir=='HRY':
+            row_to_fetch=2
+        else :
+            pass
 
 
-            cir=circles[i]
-
-            if cir=='DL':
-                row_to_fetch=0
-
-            elif cir=='PB':
-                row_to_fetch=1
-
-            elif cir=='HRY':
-                row_to_fetch=2
-            else :
-                pass
-
+        to=Email_ID.iloc[row_to_fetch]['To Mail List']
+        cc=Email_ID.iloc[row_to_fetch]['Copy Mail List']
         
-            to=Email_ID.iloc[row_to_fetch]['To Mail List']
-            cc=Email_ID.iloc[row_to_fetch]['Copy Mail List']
-            subject=f"ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {cir}"
-            body="""
-                <html>        
-                    <body>
-                        <div><p>Hi team,</p><br><br>
-                            <p>Please confirm below points so that we will approve CR’s.<br><br></p>
-                            <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).<br></p>
-                            <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.<br></p>
-                            <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
+        subject=f"ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {cir}"
+        body="""
+            <html>        
+                <body>
+                    <div><p>Hi team,</p><br><br>
+                        <p>Please confirm below points so that we will approve CR’s.<br><br></p>
+                        <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).<br></p>
+                        <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.<br></p>
+                        <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
+                    </div>
+                    <div>
+                        <p>{}</p>
+                    </div>
+                    <div>
+                        <p>Regards</p>
+                        <p>{}</p>
+                        <p>only for testing From Enjoy Maity</p>
+                        <p></p>
                         </div>
-                        <div>
-                            <p>{}</p>
-                        </div>
-                        <div>
-                            <p>Regards</p>
-                            <p>{}</p>
-                            <p>only for testing From Enjoy Maity</p>
-                            <p></p>
-                            </div>
-                    </body>
-                </html>
-                """
-            sendmail(dataframe,to,cc,body,subject,sender)
-            print(f"\nMail Sent for the Circle {cir}")
-            time.sleep(5)
+                </body>
+            </html>
+            """
+        sendmail(dataframe,to,cc,body,subject,sender)
+        print(f"\nMail Sent for the Circle {cir}")
+        time.sleep(5)
             
     paco_cscore(workbook,sender)
 
