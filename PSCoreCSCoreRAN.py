@@ -247,7 +247,7 @@ def paco_cscore(sender):
                 </body>
             </html>
         """
-        #sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
+        sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
         print(f"\nMail sent for {i}")
 
     writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
