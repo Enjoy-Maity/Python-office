@@ -10,7 +10,11 @@ class ContainsInteger(Exception):
 #####################################################################
 #############################    Sendmail   #########################
 #####################################################################
-
+def get_col_widths(dataframe):
+    # First we find the maximum length of the index column   
+    idx_max = max([len(str(s)) for s in dataframe.index.values] + [len(str(dataframe.index.name))])
+    # Then, we concatenate this to the max of the lengths of column name and its values for each column, left to right
+    return [idx_max] + [max([len(str(s)) for s in dataframe[col].values] + [len(col)]) for col in dataframe.columns.values  ]
 
 def sendmail(dataframe,to,cc,body,subject,sender):
     outlook_mailer=win32.Dispatch('Outlook.Application')
@@ -33,9 +37,11 @@ def sendmail(dataframe,to,cc,body,subject,sender):
 #############################  Paco_cscore  #########################
 #####################################################################
 
-def paco_cscore(workbook,sender):
+def paco_cscore(sender):
     
+    user=subprocess.getoutput("echo %username%") # finding the Username of the user where the directory of the file is located 
 
+    workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(user)
     daily_plan_sheet=pd.read_excel(workbook,'Planning Sheet')
     Email_Id=pd.read_excel(workbook,'Mail Id')
     #print(daily_plan_sheet)
@@ -241,7 +247,7 @@ def paco_cscore(workbook,sender):
                 </body>
             </html>
         """
-        sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
+        #sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
         print(f"\nMail sent for {i}")
 
     writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
@@ -258,22 +264,42 @@ def paco_cscore(workbook,sender):
     worksheet3=writer.sheets[sheetname2]
     worksheet4=writer.sheets[sheetname3]
     worksheet5=writer.sheets['Mail Id']
-    header_format=workbook.add_format({'bold':True,'text_wrap':True,'fg_color': '#0033cc','font_color':'#ffffff','border':1})
+    header_format=workbook.add_format({'bold':True,'fg_color': '#0033cc','font_color':'#ffffff','border':1})
+    format=workbook.add_format({'num_format':'dd/mm/yyyy'})
+
+    for i, width in enumerate(get_col_widths(daily_plan_sheet)):
+        worksheet1.set_column(i, i, width)
 
     for col_num, value in enumerate(daily_plan_sheet.columns.values):
-        worksheet1.write(0, col_num + 1, value, header_format)
+        worksheet1.write(0, col_num, value, header_format)
     
+    for j in range(0,len(daily_plan_sheet)):
+        temp="B"+str(j+2)
+        value=daily_plan_sheet.iloc[j][1]
+        worksheet1.write(temp,value,format)
+    
+    for i in range(0,len(daily_plan_sheet)):
+        worksheet1.set_column(1,1,15)
+    
+    for i, width in enumerate(get_col_widths(df)):
+        worksheet2.set_column(i, i, width)
     for col_num, value in enumerate(df.columns.values):
-        worksheet2.write(0, col_num + 1, value, header_format)
+        worksheet2.write(0, col_num, value, header_format)
     
+    for i, width in enumerate(get_col_widths(df2)):
+        worksheet3.set_column(i, i, width)
     for col_num, value in enumerate(df2.columns.values):
-        worksheet3.write(0, col_num + 1, value, header_format)
+        worksheet3.write(0, col_num, value, header_format)
     
+    for i, width in enumerate(get_col_widths(df3)):
+        worksheet4.set_column(i, i, width)
     for col_num, value in enumerate(df3.columns.values):
-        worksheet4.write(0, col_num + 1, value, header_format)
+        worksheet4.write(0, col_num, value, header_format)
     
+    for i, width in enumerate(get_col_widths(Email_Id)):
+        worksheet5.set_column(i, i, width)
     for col_num, value in enumerate(Email_Id.columns.values):
-        worksheet5.write(0, col_num + 1, value, header_format)
+        worksheet5.write(0, col_num, value, header_format)
     
     writer.save()
 
