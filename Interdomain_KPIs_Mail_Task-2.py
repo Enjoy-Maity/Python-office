@@ -73,30 +73,34 @@ def paco_cscore(sender):
     Kpis_to_be_monitored=[]
     # Execution Date	Maintenance Window	MPBN CR NO	CR Category	Impact*	Location	Circle	MPBN Activity Title	CR Owner Domain	MPBN Change Responsible	Technical Validator/Team Lead	InterDomain	Impacted Node Details	KPI's to be monitored
     for i in range(0,len(daily_plan_sheet)):
-        if daily_plan_sheet.iloc[i]['Domain kpi']=="PS Core" or daily_plan_sheet.iloc[i]['Domain kpi']=="Paco-circle":
-            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
-            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
-            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
-            cr_category.append(category)
-            impact.append(daily_plan_sheet.iloc[i]['Impact'])
-            location.append(daily_plan_sheet.iloc[i]['Location'])
-            txt=str(daily_plan_sheet.iloc[i]['Circle'])
-            circle.append(txt.upper())
-            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
-            cr_owner_domain.append(owner_domain)
-            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
-            technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
-            if technical_validator==team_leader:
-                validator.append(team_leader)
-            else:
-                tech_validator_team_leader=technical_validator+"/"+team_leader
-                validator.append(tech_validator_team_leader)
-            inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
-            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
-            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+        tomorrow=datetime.now()+timedelta(1)
+
+        if daily_plan_sheet.iloc[i]['Execution Date']==tomorrow.strftime("%d-%m-%Y"):
+            if daily_plan_sheet.iloc[i]['Domain kpi']=="PS Core" or daily_plan_sheet.iloc[i]['Domain kpi']=="Paco-circle" or daily_plan_sheet.iloc[i]['Domain kpi']=="paco-circle" or daily_plan_sheet.iloc[i]['Domain kpi']=="Paco" or daily_plan_sheet.iloc[i]['Domain kpi']=="ps core" or daily_plan_sheet.iloc[i]['Domain kpi']=="pS Core" or daily_plan_sheet.iloc[i]['Domain kpi']=="Ps core" or daily_plan_sheet.iloc[i]['Domain kpi']=="ps" or daily_plan_sheet.iloc[i]['Domain kpi']=="PS":
+                execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+                maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+                mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+                cr_category.append(category)
+                impact.append(daily_plan_sheet.iloc[i]['Impact'])
+                location.append(daily_plan_sheet.iloc[i]['Location'])
+                txt=str(daily_plan_sheet.iloc[i]['Circle'])
+                circle.append(txt.upper())
+                mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+                cr_owner_domain.append(owner_domain)
+                mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+                technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
+                if technical_validator==team_leader:
+                    validator.append(team_leader)
+                else:
+                    tech_validator_team_leader=technical_validator+"/"+team_leader
+                    validator.append(tech_validator_team_leader)
+                inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
+                impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+                Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
 
     dictionary1={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored}
     df=pd.DataFrame(dictionary1)
+    df.fillna("NA")
 
 
     ######################################################### Entering details for Cs core #######################################################################
@@ -115,30 +119,33 @@ def paco_cscore(sender):
     impacted_node_details=[]
     Kpis_to_be_monitored=[]
     for i in range(0,len(daily_plan_sheet)):
-        if daily_plan_sheet.iloc[i]['Domain kpi']=="CS Core":
-            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
-            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
-            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
-            cr_category.append(category)
-            impact.append(daily_plan_sheet.iloc[i]['Impact'])
-            location.append(daily_plan_sheet.iloc[i]['Location'])
-            txt=str(daily_plan_sheet.iloc[i]['Circle'])
-            circle.append(txt.upper())
-            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
-            cr_owner_domain.append(owner_domain)
-            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
-            technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
-            if technical_validator==team_leader:
-                validator.append(team_leader)
-            else:
-                tech_validator_team_leader=technical_validator+"/"+team_leader
-                validator.append(tech_validator_team_leader)
-            inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
-            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
-            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+        tomorrow=datetime.now()+timedelta(1)
+
+        if daily_plan_sheet.iloc[i]['Execution Date']==tomorrow.strftime("%d-%m-%Y"):
+            if daily_plan_sheet.iloc[i]['Domain kpi']=="CS Core" or daily_plan_sheet.iloc[i]['Domain kpi']=="cs core" or daily_plan_sheet.iloc[i]['Domain kpi']=="CS" or daily_plan_sheet.iloc[i]['Domain kpi']=="cs" or daily_plan_sheet.iloc[i]['Domain kpi']=="cS":
+                execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+                maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+                mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+                cr_category.append(category)
+                impact.append(daily_plan_sheet.iloc[i]['Impact'])
+                location.append(daily_plan_sheet.iloc[i]['Location'])
+                txt=str(daily_plan_sheet.iloc[i]['Circle'])
+                circle.append(txt.upper())
+                mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+                cr_owner_domain.append(owner_domain)
+                mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+                technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
+                if technical_validator==team_leader:
+                    validator.append(team_leader)
+                else:
+                    tech_validator_team_leader=technical_validator+"/"+team_leader
+                    validator.append(tech_validator_team_leader)
+                inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
+                impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+                Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
     dictionary2={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored}
     df2=pd.DataFrame(dictionary2)
-
+    df2.fillna("NA")
 
     ##########################################################  Entering details for RAN  ########################################################################
     execution_date=[]
@@ -159,97 +166,44 @@ def paco_cscore(sender):
     oss_IP=[]
     # Execution Date	Maintenance Window	MPBN CR NO	CR Category	Impact*	Location	Circle	MPBN Activity Title	CR Owner Domain	MPBN Change Responsible	Technical Validator/Team Lead	InterDomain	Impacted Node Details	KPI's to be monitored
     for i in range(0,len(daily_plan_sheet)):
-        if daily_plan_sheet.iloc[i]['Domain kpi']=="RAN":
-            execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
-            maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
-            mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
-            cr_category.append(category)
-            impact.append(daily_plan_sheet.iloc[i]['Impact'])
-            location.append(daily_plan_sheet.iloc[i]['Location'])
-            txt=str(daily_plan_sheet.iloc[i]['Circle'])
-            circle.append(txt.upper())
-            mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
-            cr_owner_domain.append(owner_domain)
-            mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
-            technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
-            if technical_validator==team_leader:
-                validator.append(team_leader)
-            else:
-                tech_validator_team_leader=technical_validator+"/"+team_leader
-                validator.append(tech_validator_team_leader)
-            inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
-            impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
-            Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
-            oss_name.append(daily_plan_sheet.iloc[i]['oss name'])
-            oss_IP.append(daily_plan_sheet.iloc[i]['oss ip'])
+        tomorrow=datetime.now()+timedelta(1)
+
+        if daily_plan_sheet.iloc[i]['Excution Date']==tomorrow.strftime("%d-%m-%Y"):
+            if daily_plan_sheet.iloc[i]['Domain kpi']=="RAN":
+                execution_date.append(daily_plan_sheet.iloc[i]['Execution Date'])
+                maintenance_window.append(daily_plan_sheet.iloc[i]['Maintenance Window'])
+                mpbn_cr_no.append(daily_plan_sheet.iloc[i]['CR NO'])
+                cr_category.append(category)
+                impact.append(daily_plan_sheet.iloc[i]['Impact'])
+                location.append(daily_plan_sheet.iloc[i]['Location'])
+                txt=str(daily_plan_sheet.iloc[i]['Circle'])
+                circle.append(txt.upper())
+                mpbn_activity_title.append(daily_plan_sheet.iloc[i]['Activity Title'])
+                cr_owner_domain.append(owner_domain)
+                mpbn_change_responsible_executor.append(daily_plan_sheet.iloc[i]['Change Responsible'])
+                technical_validator=daily_plan_sheet.iloc[i]['Technical Validator']
+                if technical_validator==team_leader:
+                    validator.append(team_leader)
+                else:
+                    tech_validator_team_leader=technical_validator+"/"+team_leader
+                    validator.append(tech_validator_team_leader)
+                inter_domain.append(daily_plan_sheet.iloc[i]['Domain kpi'])
+                impacted_node_details.append(daily_plan_sheet.iloc[i]['IMPACTED NODE'])
+                Kpis_to_be_monitored.append(daily_plan_sheet.iloc[i]['KPI DETAILS'])
+                oss_name.append(daily_plan_sheet.iloc[i]['oss name'])
+                oss_IP.append(daily_plan_sheet.iloc[i]['oss ip'])
 
     dictionary3={'CR':mpbn_cr_no,'Maintenance Window':maintenance_window,'CR Category':cr_category,'Impact*':impact,'Location':location,'Circle':circle,'MPBN Activity Title':mpbn_activity_title,'CR Owner Domain':cr_owner_domain,'Change Responsible':mpbn_change_responsible_executor,'Technical Validator/Team Lead':validator,'InterDomain':inter_domain,'Impacted Node Details':impacted_node_details,'KPIs to be monitored':Kpis_to_be_monitored,'OSS Name':oss_name,'OSS IP':oss_IP}
     df3=pd.DataFrame(dictionary3)
-
+    df3.fillna("NA")
 
     df.reset_index(drop=True,inplace=True)
     df2.reset_index(drop=True,inplace=True)
     df3.reset_index(drop=True,inplace=True)
-    list_of_interdomains=["CS Core","PS Core","RAN"]
-    tomorrow=datetime.now()+timedelta(1)
 
 
-    suffix=["st","nd","rd","th"]
-    date_end_digit=int(tomorrow.strftime("%d"))%10
-    if date_end_digit==1:
-        suffix_for_date=suffix[0]
-    elif date_end_digit==2:
-        suffix_for_date=suffix[1]
-    elif date_end_digit==3:
-        suffix_for_date=suffix[2]
-    else:
-        suffix_for_date=suffix[3]
-    for_date=tomorrow.strftime("%d{}_%b'%y").format(suffix_for_date)
+
     
-    list_of_dfs=[df2,df,df3]
-
-    for i in list_of_interdomains:
-        subject=f"ONLY FOR TESTING: KPI Monitoring | {i} for MPBN CRs | {for_date}"
-        if i=="CS Core":
-            to=Email_Id.iloc[4]['To Mail List']
-            cc=Email_Id.iloc[4]['Copy Mail List']
-            dataframe=df2
-        elif i=="PS Core":
-            to=Email_Id.iloc[3]['To Mail List']
-            cc=Email_Id.iloc[3]['Copy Mail List']
-            dataframe=df
-        elif i=="RAN":
-            to=Email_Id.iloc[5]['To Mail List']
-            cc=Email_Id.iloc[5]['Copy Mail List']
-            dataframe=df3
-    
-
-        mpbn_html_body="""
-            <html>
-                <body>
-                    <div>
-                            <p><br><br>Hi Team,</p><br><br>
-                            <p>Please find below the list of MPBN activity which includes Core nodes, so KPI monitoring required. Impacted nodes with KPI details given below. Please share KPI monitoring resource from your end.<br><br></p>
-                            <p>@Core Team: Please contact below spoc region wise if any issue with KPI input.<br><br></p>
-                            <p>Manoj Kumar: North region and west region </p>
-                            <p>Arka Maiti: East region and South region <br></p>
-                            <p>Note:-If there is any deviation in KPI please call to Executer before 6 AM. After that please call to technical validator/Team Lead.<br><br></p>
-                    
-                    </div>
-                    <div>
-                        {}
-                    </div>
-                    <div>
-                            <p>With Regards</p>
-                            <p>{}</p>
-                            <p>Ericsson India Global Services Pvt. Ltd.</p>
-                    </div>
-                </body>
-            </html>
-        """
-        sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
-        print(f"\nMail sent for {i}")
-
     writer=pd.ExcelWriter(workbook,engine='xlsxwriter')
 
     daily_plan_sheet.to_excel(writer,sheet_name='Planning Sheet',index=False)
@@ -257,6 +211,7 @@ def paco_cscore(sender):
     df2.to_excel(writer,sheet_name=sheetname2,index=False)
     df3.to_excel(writer,sheet_name=sheetname3,index=False)
     Email_Id.to_excel(writer,sheet_name='Mail Id',index=False)
+
 
     workbook=writer.book
     worksheet1=writer.sheets['Planning Sheet']
@@ -302,6 +257,71 @@ def paco_cscore(sender):
         worksheet5.write(0, col_num, value, header_format)
     
     writer.save()
+
+    c=input("Do you want to snd the mails or not? y/n ")
+    if c=='y' or c=='Y':
+        list_of_interdomains=["CS Core","PS Core","RAN"]
+        tomorrow=datetime.now()+timedelta(1)
+
+        suffix=["st","nd","rd","th"]
+        date_end_digit=int(tomorrow.strftime("%d"))%10
+        date_digits=int(tomorrow.strftime("%d"))%100
+        if date_digits<10 or date_digits>20:
+            if date_end_digit==1:
+                suffix_for_date=suffix[0]
+            elif date_end_digit==2:
+                suffix_for_date=suffix[1]
+            elif date_end_digit==3:
+                suffix_for_date=suffix[2]
+            else:
+                suffix_for_date=suffix[3]
+        else:
+            suffix_for_date=suffix[3]
+        for_date=tomorrow.strftime("%d{}_%b'%y").format(suffix_for_date)
+        
+        list_of_dfs=[df2,df,df3]
+
+        for i in list_of_interdomains:
+            subject=f"ONLY FOR TESTING: KPI Monitoring | {i} for MPBN CRs | {for_date}"
+            if i=="CS Core":
+                to=Email_Id.iloc[4]['To Mail List']
+                cc=Email_Id.iloc[4]['Copy Mail List']
+                dataframe=df2
+            elif i=="PS Core":
+                to=Email_Id.iloc[3]['To Mail List']
+                cc=Email_Id.iloc[3]['Copy Mail List']
+                dataframe=df
+            elif i=="RAN":
+                to=Email_Id.iloc[5]['To Mail List']
+                cc=Email_Id.iloc[5]['Copy Mail List']
+                dataframe=df3
+            
+            mpbn_html_body="""
+                <html>
+                    <body>
+                        <div>
+                                <p>Hi Team,</p>
+                                <p>Please find below the list of MPBN activity which includes Core nodes, so KPI monitoring required. Impacted nodes with KPI details given below. Please share KPI monitoring resource from your end.<br><br></p>
+                                <p>@Core Team: Please contact below spoc region wise if any issue with KPI input.<br><br></p>
+                                <p>Manoj Kumar: North region and west region </p>
+                                <p>Arka Maiti: East region and South region <br></p>
+                                <p>Note:-If there is any deviation in KPI please call to Executer before 6 AM. After that please call to technical validator/Team Lead.<br><br></p>
+                        
+                        </div>
+                        <div>
+                            {}
+                        </div>
+                        <div>
+                                <p>With Regards</p>
+                                <p>{}</p>
+                                <p>Ericsson India Global Services Pvt. Ltd.</p>
+                        </div>
+                    </body>
+                </html>
+            """
+            sendmail(dataframe,to,cc,mpbn_html_body,subject,sender)
+            print(f"\nMail sent for {i}")
+
 
 if __name__=="__main__":
     

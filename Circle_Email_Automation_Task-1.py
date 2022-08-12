@@ -33,6 +33,10 @@ def sendmail(dataframe,to,cc,body,subject,sender):
 #####################################################################
 
 def fetch_details(sender):
+    import subprocess
+    import pandas as pd
+    from datetime import datetime,timedelta
+
     user=subprocess.getoutput("echo %username%") # finding the Username of the user where the directory of the file is located 
 
     workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(user)
@@ -45,9 +49,7 @@ def fetch_details(sender):
         daily_plan_sheet.at[j,'Circle']=temp.upper()
 
     circles=daily_plan_sheet['Circle'].unique()
-    print(circles)
     email_id_list=Email_ID['Circle'].unique()
-    print(email_id_list)
     # print(circles) # checking for all the unique values of circles in the MPBN Planning Sheets
     remainder=list(set(circles)-set(email_id_list))
     remainder_list=",".join(remainder)
@@ -55,6 +57,7 @@ def fetch_details(sender):
         print(f"\nMail could not be sent for {remainder_list} as there's no email id present for the {remainder_list} in the Email ID sheet in MPBN Daily Planning Sheet")
     
     circles=list(set(circles)-set(remainder))
+    daily_plan_sheet['Execution Date']=daily_plan_sheet['Execution Date'].dt.to_pydatetime()
         
     for i in range(0,len(circles)):
 
@@ -69,8 +72,9 @@ def fetch_details(sender):
         for j in range(0,len(daily_plan_sheet)):
 
             tomorrow=datetime.now()+timedelta(1)
-
-            if daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
+            tomorrow=tomorrow.strftime('%d/%m/%Y')
+            #print(str(tomorrow.strftime("%d-%m-%Y")))
+            if daily_plan_sheet[j]['Execution Date']==tomorrow and daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
 
                 execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
                 maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
@@ -83,6 +87,11 @@ def fetch_details(sender):
         dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
         dataframe=pd.DataFrame(dictionary_for_insertion)
         dataframe.reset_index(drop=True,inplace=True)
+        dataframe.fillna("NA")
+        dataframe['Execution Date']=pd.to_datetime(dataframe['Execution Date'])
+        dataframe['Execution Date']=dataframe['Execution Date'].dt.strftime('%d-%m-%Y')
+
+        print(dataframe)
 
         cir=circles[i]
 
@@ -105,10 +114,10 @@ def fetch_details(sender):
         body="""
             <html>        
                 <body>
-                    <div><p>Hi team,</p><br><br>
-                        <p>Please confirm below points so that we will approve CR’s.<br><br></p>
-                        <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).<br></p>
-                        <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.<br></p>
+                    <div><p>Hi team,<br></p>
+                        <p>Please confirm below points so that we will approve CR’s.<br></p>
+                        <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).</p>
+                        <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.</p>
                         <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
                     </div>
                     <div>
@@ -123,9 +132,9 @@ def fetch_details(sender):
                 </body>
             </html>
             """
-        sendmail(dataframe,to,cc,body,subject,sender)
-        print(f"\nMail Sent for the Circle {cir}")
-        time.sleep(5)
+        # sendmail(dataframe,to,cc,body,subject,sender)
+        # print(f"\nMail Sent for the Circle {cir}")
+        # time.sleep(5)
             
 
 
