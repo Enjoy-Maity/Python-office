@@ -42,6 +42,9 @@ def fetch_details(sender):
     workbook=r"C:\Users\{}\Daily\MPBN Daily Planning Sheet.xlsx".format(user)
     excel=pd.ExcelFile(workbook)
     daily_plan_sheet=pd.read_excel(excel,'Planning Sheet')
+    daily_plan_sheet.fillna("NA",inplace=True)
+    #print(daily_plan_sheet.head())
+    #print(daily_plan_sheet['Execution Date'])
     Email_ID=pd.read_excel(excel,'Mail Id')
 
     for j in range(0,len(daily_plan_sheet)):
@@ -57,7 +60,7 @@ def fetch_details(sender):
         print(f"\nMail could not be sent for {remainder_list} as there's no email id present for the {remainder_list} in the Email ID sheet in MPBN Daily Planning Sheet")
     
     circles=list(set(circles)-set(remainder))
-    daily_plan_sheet['Execution Date']=daily_plan_sheet['Execution Date'].dt.to_pydatetime()
+    #daily_plan_sheet['Execution Date']=daily_plan_sheet['Execution Date'].dt.to_pydatetime()
         
     for i in range(0,len(circles)):
 
@@ -72,11 +75,12 @@ def fetch_details(sender):
         for j in range(0,len(daily_plan_sheet)):
 
             tomorrow=datetime.now()+timedelta(1)
-            tomorrow=tomorrow.strftime('%d/%m/%Y')
             #print(str(tomorrow.strftime("%d-%m-%Y")))
-            if daily_plan_sheet[j]['Execution Date']==tomorrow and daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
+            #if daily_plan_sheet.iloc[j]['Execution Date']==tomorrow:
+            if daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
 
                 execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
+                print(len(execution_date))
                 maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
                 cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
                 activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
@@ -87,11 +91,11 @@ def fetch_details(sender):
         dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
         dataframe=pd.DataFrame(dictionary_for_insertion)
         dataframe.reset_index(drop=True,inplace=True)
-        dataframe.fillna("NA")
-        dataframe['Execution Date']=pd.to_datetime(dataframe['Execution Date'])
-        dataframe['Execution Date']=dataframe['Execution Date'].dt.strftime('%d-%m-%Y')
+        dataframe.fillna("NA",inplace=True) #adding inplace to replace nan or NaN with the string NA or else it won't replace the nan values
+        # dataframe['Execution Date']=pd.to_datetime(dataframe['Execution Date'])
+        # dataframe['Execution Date']=dataframe['Execution Date'].dt.strftime('%d-%m-%Y')
 
-        print(dataframe)
+        print(dataframe.head())
 
         cir=circles[i]
 
