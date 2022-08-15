@@ -6,6 +6,9 @@ class ContainsInteger(Exception):
     def __init__(self,msg):
         self.msg=msg
 
+class TomorrowDataNotFound(Exception):
+    def __init__(self,msg):
+        self.msg=msg
 
 #####################################################################
 #############################    Sendmail   #########################
@@ -43,103 +46,103 @@ def fetch_details(sender):
     excel=pd.ExcelFile(workbook)
     daily_plan_sheet=pd.read_excel(excel,'Planning Sheet')
     daily_plan_sheet.fillna("NA",inplace=True)
-    #print(daily_plan_sheet.head())
-    #print(daily_plan_sheet['Execution Date'])
-    Email_ID=pd.read_excel(excel,'Mail Id')
 
-    for j in range(0,len(daily_plan_sheet)):
-        temp=daily_plan_sheet.at[j,'Circle']
-        daily_plan_sheet.at[j,'Circle']=temp.upper()
+    tomorrow=datetime.now()+timedelta(1) # getting tomorrow date for data execution
+    daily_plan_sheet=daily_plan_sheet[daily_plan_sheet['Execution Date']==tomorrow.strftime('%Y-%m-%d')]
 
-    circles=daily_plan_sheet['Circle'].unique()
-    email_id_list=Email_ID['Circle'].unique()
-    # print(circles) # checking for all the unique values of circles in the MPBN Planning Sheets
-    remainder=list(set(circles)-set(email_id_list))
-    remainder_list=",".join(remainder)
-    if len(remainder)>0:
-        print(f"\nMail could not be sent for {remainder_list} as there's no email id present for the {remainder_list} in the Email ID sheet in MPBN Daily Planning Sheet")
+    if len(daily_plan_sheet)==0:
+        raise TomorrowDataNotFound("Data for tomorrow's date is not present in the MPBN Daily Planning Sheet, kindly check!")
     
-    circles=list(set(circles)-set(remainder))
-    #daily_plan_sheet['Execution Date']=daily_plan_sheet['Execution Date'].dt.to_pydatetime()
-        
-    for i in range(0,len(circles)):
-
-        execution_date=[]       #  list for collecting execution date of each Cr
-        circle=[]               #  list for collecting circle of each CR
-        maintenance_window=[]   #  list for collecting the maintenance window of each CR
-        cr_no=[]                #  list for collecting the CR No
-        activity_title=[]       #  list for collecting the activity title each CR
-        risk=[]                 #  list for collecting the risk level of each CR
-        location=[]             #  list for collecting the location of each CR
+    else:
+        Email_ID=pd.read_excel(excel,'Mail Id')
 
         for j in range(0,len(daily_plan_sheet)):
+            temp=daily_plan_sheet.iloc[j]['Circle']
+            daily_plan_sheet.iloc[j]['Circle']=temp.upper()
 
-            tomorrow=datetime.now()+timedelta(1)
-            #print(str(tomorrow.strftime("%d-%m-%Y")))
-            #if daily_plan_sheet.iloc[j]['Execution Date']==tomorrow:
-            if daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
-
-                execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
-                print(len(execution_date))
-                maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
-                cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
-                activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
-                risk.append(daily_plan_sheet.iloc[j]['Risk'])
-                circle.append(daily_plan_sheet.iloc[j]['Circle'])
-                location.append(daily_plan_sheet.iloc[j]['Location'])
-
-        dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
-        dataframe=pd.DataFrame(dictionary_for_insertion)
-        dataframe.reset_index(drop=True,inplace=True)
-        dataframe.fillna("NA",inplace=True) #adding inplace to replace nan or NaN with the string NA or else it won't replace the nan values
-        # dataframe['Execution Date']=pd.to_datetime(dataframe['Execution Date'])
-        # dataframe['Execution Date']=dataframe['Execution Date'].dt.strftime('%d-%m-%Y')
-
-        print(dataframe.head())
-
-        cir=circles[i]
-
-        if cir=='DL':
-            row_to_fetch=0
-
-        elif cir=='PB':
-            row_to_fetch=1
-
-        elif cir=='HRY':
-            row_to_fetch=2
-        else :
-            pass
-
-
-        to=Email_ID.iloc[row_to_fetch]['To Mail List']
-        cc=Email_ID.iloc[row_to_fetch]['Copy Mail List']
+        circles=daily_plan_sheet['Circle'].unique()
+        email_id_list=Email_ID['Circle'].unique()
+        # print(circles) # checking for all the unique values of circles in the MPBN Planning Sheets
+        remainder=list(set(circles)-set(email_id_list))
+        remainder_list=",".join(remainder)
+        if len(remainder)>0:
+            print(f"\nMail could not be sent for {remainder_list} as there's no email id present for the {remainder_list} in the Email ID sheet in MPBN Daily Planning Sheet")
         
-        subject=f"ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {cir}"
-        body="""
-            <html>        
-                <body>
-                    <div><p>Hi team,<br></p>
-                        <p>Please confirm below points so that we will approve CR’s.<br></p>
-                        <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).</p>
-                        <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.</p>
-                        <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
-                    </div>
-                    <div>
-                        <p>{}</p>
-                    </div>
-                    <div>
-                        <p>Regards</p>
-                        <p>{}</p>
-                        <p>only for testing From Enjoy Maity</p>
-                        <p></p>
-                        </div>
-                </body>
-            </html>
-            """
-        # sendmail(dataframe,to,cc,body,subject,sender)
-        # print(f"\nMail Sent for the Circle {cir}")
-        # time.sleep(5)
+        circles=list(set(circles)-set(remainder))
+        #daily_plan_sheet['Execution Date']=daily_plan_sheet['Execution Date'].dt.to_pydatetime()
             
+        for i in range(0,len(circles)):
+
+            execution_date=[]       #  list for collecting execution date of each Cr
+            circle=[]               #  list for collecting circle of each CR
+            maintenance_window=[]   #  list for collecting the maintenance window of each CR
+            cr_no=[]                #  list for collecting the CR No
+            activity_title=[]       #  list for collecting the activity title each CR
+            risk=[]                 #  list for collecting the risk level of each CR
+            location=[]             #  list for collecting the location of each CR
+
+            for j in range(0,len(daily_plan_sheet)):
+                #print(str(tomorrow.strftime("%d-%m-%Y")))
+                
+                if daily_plan_sheet.iloc[j]['Circle']==circles[i]: # Adding constraint to check for CRs for next date only
+
+                    execution_date.append(daily_plan_sheet.iloc[j]['Execution Date'])
+                    maintenance_window.append(daily_plan_sheet.iloc[j]['Maintenance Window'])
+                    cr_no.append(daily_plan_sheet.iloc[j]['CR NO'])
+                    activity_title.append(daily_plan_sheet.iloc[j]['Activity Title'])
+                    risk.append(daily_plan_sheet.iloc[j]['Risk'])
+                    circle.append(daily_plan_sheet.iloc[j]['Circle'])
+                    location.append(daily_plan_sheet.iloc[j]['Location'])
+
+            dictionary_for_insertion={'Execution Date':execution_date, 'Maintenance Window':maintenance_window, 'CR NO':cr_no, 'Activity Title':activity_title, 'Risk':risk,'Location':location,'Circle':circle}
+            dataframe=pd.DataFrame(dictionary_for_insertion)
+            dataframe.reset_index(drop=True,inplace=True)
+            dataframe.fillna("NA",inplace=True) #adding inplace to replace nan or NaN with the string NA or else it won't replace the nan values
+            # dataframe['Execution Date']=pd.to_datetime(dataframe['Execution Date'])
+            dataframe['Execution Date']=dataframe['Execution Date'].dt.strftime('%d-%m-%Y')
+
+            #print(dataframe.head())
+
+            cir=circles[i]
+
+            if cir=='DL':
+                row_to_fetch=0
+
+            elif cir=='PB':
+                row_to_fetch=1
+
+            elif cir=='HRY':
+                row_to_fetch=2
+            else :
+                pass
+
+
+            to=Email_ID.iloc[row_to_fetch]['To Mail List']
+            cc=Email_ID.iloc[row_to_fetch]['Copy Mail List']
+            
+            subject=f"ONLY FOR TEST :Connected End Nodes and their services on MPBN devices: {cir}"
+            body="""
+                <html>        
+                    <body>
+                        <div><p>Hi team,<br></p>
+                            <p>Please confirm below points so that we will approve CR’s.<br></p>
+                            <p>1)  End nodes and service details are required which are running on respective MPBN device (in case of changes on Core/PACO/HLR devices ).</p>
+                            <p>2)  Design Maker & Checker confirmation mail need to be shared for all planned activity on Core/PACO/HLR devices.</p>
+                            <p>3)  KPI & Tester details need to be shared for all impacted nodes in Level-1 CR’s (SA).Also same details need to be shared for all Level-2 CR’s (NSA) with respect to changes on Core/PACO/HLR devices.<br><br></p>
+                        </div>
+                        <div>
+                            <p>{}</p>
+                        </div>
+                        <div>
+                            <p>Regards<br>{}<br>only for testing From Enjoy Maity<br>Ericsson India Global Services Pvt. Ltd.</p>
+                            </div>
+                    </body>
+                </html>
+                """
+            sendmail(dataframe,to,cc,body,subject,sender)
+            print(f"\nMail Sent for the Circle {cir}")
+            time.sleep(5)
+                    
 
 
 #####################################################################
@@ -194,8 +197,11 @@ if __name__=="__main__":
     
     except ValueError:
          working_directory=r"C:\Users\{}\Daily".format(subprocess.getoutput("echo %username%"))
-         print("Check {} for MPBN Daily Planning Sheet.xlsx for all the requirement sheet".format(working_directory))
+         print("Check {} for MPBN Daily Planning Sheet.xlsx for all the requirement sheets".format(working_directory))
     
+    except TomorrowDataNotFound as error:
+        print(error)
+
     except EmptyString as error:
         print(error)
         current_file=__file__ # gets the value of current running file
